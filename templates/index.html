@@ -1,0 +1,279 @@
+<style>
+	img{
+		background-color: #000;
+		height: 100px;
+		width:100px;
+		margin: 0px;
+		padding: 0px;
+	}
+
+	#game{
+		min-width: 1500px;
+		margin: 50px 50px;
+	}
+
+	.player{
+		top:50;
+		width: 100px;
+		position: absolute;
+		margin: 0;
+		padding: 0;
+	}
+
+	.player img{
+		position: relative;
+	}
+
+	.bullet{
+		position: absolute;
+		background-color:#000;
+		width:10px;
+		height:10px;
+	}
+
+	#main{
+	}
+
+	#opp{
+		left:0;
+	}
+</style>
+
+<div id="game">
+	<div class="player" id="opp">
+		<img class="opp" />
+	</div>
+	<div class="player" id="main">
+		<img class="main" />
+	</div>
+</div>
+
+<script>
+Player = function(side){
+	this.health = 100;
+	this.vy = 0;
+	this.vx = 0;
+	this.height = 100;
+	this.width = 100;
+	this.y = 0;
+	this.x = 0;
+	this.shoot = false;
+	this.side = side;
+	this.container = document.getElementById(side);
+	this.ships = [];
+	this.ships[0] = new Ship(this,0,0);
+}
+Player.prototype.move = function(){
+
+	// Poor Mans collision detection
+	if(this.check(this.x,	this.y)) return;
+	if(this.check(this.x + this.width,this.y)) return;
+	if(this.check(this.x,	this.y + this.height)) return;
+	if(this.check(this.x + this.width,this.y + this.height)) return;
+
+	if (this.y + this.vy < 0) this.y = 0;
+	else this.y += this.vy;
+
+	if (this.y + this.vy > y - this.height) this.y = y - this.height;
+	else this.y += this.vy;
+
+	if (this.x + this.vx < 0) this.x = 0;
+	else this.x += this.vx;
+
+	if (this.x + this.vx > x - this.width) this.x = x - this.width;
+	else this.x += this.vx;
+
+	this.container.style.left = this.x + "px";
+	this.container.style.top = this.y  + "px";
+}
+Player.prototype.check = function(checkX,checkY){
+	if (checkX + this.vx >= this.opp.x)
+	if (checkX + this.vx <= this.opp.x + this.opp.width)
+	if (checkY + this.vy <= this.opp.y + this.opp.height)
+	if (checkY + this.vy >= this.opp.y)
+		return true;
+	return false;
+}
+Player.prototype.direction = function(){
+	if(this.x >= this.opp.x && this.x <= this.opp.x + this.opp.width && this.y > this.opp.y + this.opp.height) return "up";
+	if(this.x >= this.opp.x && this.x <= this.opp.x + this.opp.width && this.y < this.opp.y) return "down";
+	if(this.x > this.opp.x) return "left";
+	if(this.x < this.opp.x) return "right";
+}
+Player.prototype.damage = function(){
+	this.health -= 10;
+	if(this.health <= 0){
+		alert("dead");
+		if(this.ships.length < 5)
+			this.ships[this.ships.length] = new Ship(this,0,this.ships.length * 10);
+		else{ running = false; alert("dead dead");}
+		this.height += 110;
+		this.health = 200;
+	}
+}
+
+Ship = function(parent,x,y){
+	this.parent = parent;
+	this.x = x; // for height
+	this.y = y + parent.ships.length * 100;
+	this.width = 100;
+	this.height = 100;
+	this.dom = document.querySelector("." + parent.side);
+	if(this.dom == null){
+		this.dom = document.createElement('img');
+		this.dom.style.right = x + "px";
+		this.dom.style.top = y + "px";
+		this.parent.container.appendChild(this.dom);
+	}else this.dom.className = "";
+}
+Ship.prototype.xy = function(direction){
+	switch(direction){
+		case "up": return {'x':this.parent.x + this.x + this.width/2,'y':this.parent.y + this.x};
+			break;
+		case "down": return {'x':this.parent.x + this.x + this.width/2,'y':this.parent.y + this.height + this.y};
+			break;
+		case "left": return {'x':this.parent.x + this.x,'y':this.parent.y + this.height/2 + this.y};
+			break;
+		case "right": return {'x':this.parent.x + this.x + this.width,'y':this.parent.y + this.height/2 + this.y};;
+			break;
+	}	
+}
+
+Bullet = function(xy,direction){
+	this.dom = document.createElement('div');
+	this.x = xy.x;
+	this.y = xy.y;
+	this.move(0,0);
+	this.dom.className = "bullet";
+	this.direction = direction;
+	game.appendChild(this.dom);
+}
+Bullet.prototype.move = function(X,Y){
+	this.x += X;
+	this.y += Y;
+	this.dom.style.left = this.x + "px";
+	this.dom.style.top = this.y + "px";
+}
+
+Bullets = function(side){
+	this.bullets = [];
+	if(side == 'main') this.parent = main;
+	else parent = this.parent = opp;
+	this.direction = this.parent.direction();
+	for (var i = 0; i < this.parent.ships.length; i++) {
+		xy = this.parent.ships[i].xy(this.direction);
+		this.bullets[i] = new Bullet(xy,this.direction);
+	};
+}
+Bullets.prototype.move = function(){
+	for (var i = 0; i < this.bullets.length; i++) {
+		switch(this.direction){
+			case "up": this.bullets[i].move(0,-10);
+				break;
+			case "down": this.bullets[i].move(0,10);
+				break;
+			case "left": this.bullets[i].move(-10,0);
+				break;
+			case "right": this.bullets[i].move(10,0);
+				break;
+		}
+		if(this.parent.check(this.bullets[i].x,	this.bullets[i].y)){ 
+			this.parent.opp.damage();
+			this.bullets[i].dom.remove();
+			this.bullets.splice(i--,1);			
+			continue;
+		}
+
+		if(this.bullets[i].x < 0 
+			|| this.bullets[i].x > x
+			|| this.bullets[i].y < 0
+			|| this.bullets[i].x > y){
+			this.bullets[i].dom.remove();
+			this.bullets.splice(i--,1);
+			continue;			
+		}
+	};
+}
+
+var main = new Player("main")
+, opp = new Player("opp")
+, running = true
+, fps = 1000/50
+, y = window.innerHeight
+, x = window.innerWidth
+, bullets = []
+, game = document.getElementById("game");
+
+// Set to the other side of the board
+main.x = x - main.width;
+main.container.style.left = main.x + "px";
+
+opp.opp = main;
+main.opp = opp;
+
+document.onkeydown = function(e) {
+	if(e.which == 38) main.vy = -5; //up
+	if(e.which == 39) main.vx = 5; //left
+   	if(e.which == 37) main.vx = -5; //right
+   	if(e.which == 40) main.vy = 5; //down
+
+	if(e.which == 87) opp.vy = -5; //w
+	if(e.which == 65) opp.vx = -5; //a
+   	if(e.which == 83) opp.vy = 5;  //s
+   	if(e.which == 68) opp.vx = 5;  //d
+}
+document.onkeyup = function(e) {
+	if(e.which == 38) main.vy = 0;  //up
+	if(e.which == 37) main.vx = 0; //left
+   	if(e.which == 39) main.vx = 0; //right
+   	if(e.which == 40) main.vy = 0; //down
+
+	if(e.which == 87) opp.vy = 0; //w
+	if(e.which == 65) opp.vx = 0; //a
+   	if(e.which == 83) opp.vy = 0; //s
+   	if(e.which == 68) opp.vx = 0; //d
+
+   	// Shoot
+   	if(e.which == 107) main.shoot = true;  // +
+   	if(e.which == 69) opp.shoot = true; // e
+}
+
+animate = function(){
+
+	y = window.innerHeight;
+	x = window.innerWidth;
+	// Get start time
+	var d = new Date();
+	var then = d.getTime();
+
+	// Move em
+	main.move();
+	opp.move();
+
+	// Shoot em
+	if(main.shoot) bullets[bullets.length] = new Bullets("main");
+	if(opp.shoot) bullets[bullets.length] = new Bullets("opp");
+	main.shoot = false;
+	opp.shoot = false;
+
+	for (var i = bullets.length - 1; i >= 0; i--) {
+		bullets[i].move();
+		if(bullets[i].bullets.length == 0) bullets.splice(i--,1);
+	};
+
+	// Get current Time
+	var d = new Date();
+	var now = d.getTime();
+
+	//Adjust next call for time elapsed
+	var delay = fps - now + then;
+	if(delay < 0)
+		delay = 0;
+
+	//Call if still running
+	if (running)
+		window.setTimeout('animate()',delay);
+}
+
+animate();
+</script>
