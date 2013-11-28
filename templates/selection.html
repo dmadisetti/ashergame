@@ -1,0 +1,87 @@
+<style>
+      input{
+        display:none;
+      }
+
+      label {
+        margin: 5px;
+        padding: 5px;
+        height:	100px;
+        width: 175px;
+        border: 2px solid white;
+        vertical-align: middle;
+        border-radius: 5px;
+        display:block;
+        background-repeat: no-repeat;
+      }
+
+      input[type="radio"]:checked + label{
+        border: 2px solid black;
+      }
+
+      label[for="helicopter"]{
+        background-image:url('/static/helicopter.jpg');
+      }
+      label[for="b17"]{
+        background-image:url('/static/b17.jpg');
+      }
+      label[for="jet"]{
+        background-image:url('/static/jet.jpg');
+      }
+      label[for="plane"]{
+        background-image:url('/static/plane.jpg');
+      }
+      label[for="helicopter1"]{
+        background-image:url('/static/helicopter.jpg');
+      }
+      label[for="b171"]{
+        background-image:url('/static/b17.jpg');
+      }
+      label[for="jet1"]{
+        background-image:url('/static/jet.jpg');
+      }
+      label[for="plane1"]{
+        background-image:url('/static/plane.jpg');
+      }
+      .left,.right{
+      	float:left;
+      	margin: 50px;
+      	width: 160px;
+      }
+      .right{
+      	float:right;
+      }
+      button{
+      	width:100%;
+      	height:50px;
+      }
+</style>
+
+<body>
+	<div class="right">
+		Player 2
+		<input type="radio" name="player1" value="helicopter" id="helicopter1"><label for="helicopter1"></label>
+		<input type="radio" name="player1" value="b17" id="b171"><label for="b171"></label>
+		<input type="radio" name="player1" value="jet" id="jet1"><label for="jet1"></label>
+		<input type="radio" name="player1" value="plane" id="plane1"><label for="plane1"></label>
+	</div>
+	<div class="left">
+		Player 1
+		<input type="radio" name="player2" value="helicopter" id="helicopter"><label for="helicopter"></label>
+		<input type="radio" name="player2" value="b17" id="b17"><label for="b17"></label>
+		<input type="radio" name="player2" value="jet" id="jet"><label for="jet"></label>
+		<input type="radio" name="player2" value="plane" id="plane"><label for="plane"></label>
+	</div>
+	<button onclick="go()">
+	Fight!
+	</button>
+
+
+</body>
+<script>
+go = function(){
+	p1 = document.querySelector('input[name="player1"]:checked').value;
+	p2 = document.querySelector('input[name="player2"]:checked').value;
+	window.location = "/"+ p1 +"/"+ p2;
+}
+</script>

@@ -2,7 +2,7 @@
 	img{
 		background-color: #000;
 		height: 100px;
-		width:100px;
+		width:150px;
 		margin: 0px;
 		padding: 0px;
 	}
@@ -12,15 +12,15 @@
 		margin: 50px 50px;
 	}
 
-	.player{
+	#game #main,#game #opp{
 		top:50;
-		width: 100px;
+		width: 150px;
 		position: absolute;
 		margin: 0;
 		padding: 0;
 	}
 
-	.player img{
+	#game div img{
 		position: relative;
 	}
 
@@ -29,6 +29,15 @@
 		background-color:#000;
 		width:10px;
 		height:10px;
+	}
+
+	.flip{
+		-moz-transform: scaleX(-1);
+		-webkit-transform: scaleX(-1);
+		-o-transform: scaleX(-1);
+		transform: scaleX(-1);
+		-ms-filter: fliph; /*IE*/
+		filter: fliph; /*IE*/
 	}
 
 	#main{
@@ -40,11 +49,11 @@
 </style>
 
 <div id="game">
-	<div class="player" id="opp">
-		<img class="opp" />
+	<div id="opp">
+		<img class="opp" src="/static/{{opp}}.jpg" />
 	</div>
-	<div class="player" id="main">
-		<img class="main" />
+	<div id="main">
+		<img class="main"  src="/static/{{main}}.jpg"/>
 	</div>
 </div>
 
@@ -54,7 +63,7 @@ Player = function(side){
 	this.vy = 0;
 	this.vx = 0;
 	this.height = 100;
-	this.width = 100;
+	this.width = 150;
 	this.y = 0;
 	this.x = 0;
 	this.shoot = false;
@@ -85,6 +94,18 @@ Player.prototype.move = function(){
 
 	this.container.style.left = this.x + "px";
 	this.container.style.top = this.y  + "px";
+
+	// Direction for image flipping
+	if(this.x >= this.opp.x && this.x <= this.opp.x + this.opp.width && this.y > this.opp.y + this.opp.height) this.direction = "up";
+	else if(this.x >= this.opp.x && this.x <= this.opp.x + this.opp.width && this.y < this.opp.y) this.direction = "down";
+	else if(this.x > this.opp.x){ 
+		this.direction = "left";
+		this.container.className = "flip";
+	}
+	else if(this.x < this.opp.x){
+		this.direction = "right";
+		this.container.className = "";	
+	}
 }
 Player.prototype.check = function(checkX,checkY){
 	if (checkX + this.vx >= this.opp.x)
@@ -94,19 +115,12 @@ Player.prototype.check = function(checkX,checkY){
 		return true;
 	return false;
 }
-Player.prototype.direction = function(){
-	if(this.x >= this.opp.x && this.x <= this.opp.x + this.opp.width && this.y > this.opp.y + this.opp.height) return "up";
-	if(this.x >= this.opp.x && this.x <= this.opp.x + this.opp.width && this.y < this.opp.y) return "down";
-	if(this.x > this.opp.x) return "left";
-	if(this.x < this.opp.x) return "right";
-}
 Player.prototype.damage = function(){
 	this.health -= 10;
 	if(this.health <= 0){
-		alert("dead");
 		if(this.ships.length < 5)
 			this.ships[this.ships.length] = new Ship(this,0,this.ships.length * 10);
-		else{ running = false; alert("dead dead");}
+		else{ running = false; alert(this.death);}
 		this.height += 110;
 		this.health = 200;
 	}
@@ -116,13 +130,14 @@ Ship = function(parent,x,y){
 	this.parent = parent;
 	this.x = x; // for height
 	this.y = y + parent.ships.length * 100;
-	this.width = 100;
+	this.width = 150;
 	this.height = 100;
 	this.dom = document.querySelector("." + parent.side);
 	if(this.dom == null){
 		this.dom = document.createElement('img');
 		this.dom.style.right = x + "px";
 		this.dom.style.top = y + "px";
+		this.dom.src = this.parent.container.children[0].src;
 		this.parent.container.appendChild(this.dom);
 	}else this.dom.className = "";
 }
@@ -159,7 +174,7 @@ Bullets = function(side){
 	this.bullets = [];
 	if(side == 'main') this.parent = main;
 	else parent = this.parent = opp;
-	this.direction = this.parent.direction();
+	this.direction = this.parent.direction;
 	for (var i = 0; i < this.parent.ships.length; i++) {
 		xy = this.parent.ships[i].xy(this.direction);
 		this.bullets[i] = new Bullet(xy,this.direction);
@@ -187,7 +202,7 @@ Bullets.prototype.move = function(){
 		if(this.bullets[i].x < 0 
 			|| this.bullets[i].x > x
 			|| this.bullets[i].y < 0
-			|| this.bullets[i].x > y){
+			|| this.bullets[i].y > y){
 			this.bullets[i].dom.remove();
 			this.bullets.splice(i--,1);
 			continue;			
@@ -207,6 +222,10 @@ var main = new Player("main")
 // Set to the other side of the board
 main.x = x - main.width;
 main.container.style.left = main.x + "px";
+
+// For death alert
+opp.death = "Player 1 the {{opp}} has died";
+main.death = "Player 2 the {{main}} has died";
 
 opp.opp = main;
 main.opp = opp;
